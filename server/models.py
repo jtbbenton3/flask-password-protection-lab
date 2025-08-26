@@ -10,19 +10,25 @@ class User(db.Model):
     username = db.Column(db.String)
     _password_hash = db.Column(db.String)
 
-    # Build method to protect password_hash property
+    
     @hybrid_property
     def password_hash(self):
-        pass
+        raise AttributeError("password_hash is not a readable attribute")
 
-    # Build method to set password hash property using bcrypt.generate_password_hash()
+    
     @password_hash.setter
     def password_hash(self, password):
-        pass
+        if password is None:
+            raise ValueError("Password cannot be None")
+        pw_hash = bcrypt.generate_password_hash(password)
+        
+        self._password_hash = pw_hash.decode("utf-8") if isinstance(pw_hash, (bytes, bytearray)) else pw_hash
 
-    # Build authenticate method that uses bcrypt.check_password_hash()
+    
     def authenticate(self, password):
-        pass
+        if not self._password_hash:
+            return False
+        return bcrypt.check_password_hash(self._password_hash, password)
 
     def __repr__(self):
         return f'User {self.username}, ID: {self.id}'
